@@ -1,3 +1,5 @@
+import * as _ from 'lodash'
+
 type TPoint = {
   x: number;
   y: number
@@ -6,192 +8,121 @@ type TRect = TPoint & {
   width: number;
   height: number
 }
+type TBullet = TRect & {
+  dest: TPoint;
+}
+type TPlayer = TRect & {
+  speed: number;
+  bullets: TBullet[]
+  canShot: boolean
+  color: string
+}
 
 
 const main = (viewport: HTMLCanvasElement): void => {
   const ctx = viewport.getContext("2d");
 
-  const playerRect: TRect = { x: viewport.width / 2, y: viewport.height / 2, width: 32, height: 32 }
+  let player: TPlayer = { x: 32, y: viewport.height / 2, width: 32, height: 32, speed: 4, bullets: [], canShot: true, color: '#FF9500' }
+  let enemies: TPlayer[] = []
 
-  const drawBox = (r: TRect) => {
+
+  let upPressed: boolean = false;
+  let downPressed: boolean = false;
+  let spacePressed: boolean = false;
+  document.addEventListener("keydown", (e) => {
+    if (_.includes(["Up", "ArrowUp"], e.key)) {
+      upPressed = true
+    } else if (_.includes(["Down", "ArrowDown"], e.key)) {
+      downPressed = true
+    } else if (_.includes(["Control"], e.key)) {
+      spacePressed = true
+    }
+  }, false);
+  document.addEventListener("keyup", (e) => {
+    if (_.includes(["Up", "ArrowUp"], e.key)) {
+      upPressed = false
+    } else if (_.includes(["Down", "ArrowDown"], e.key)) {
+      downPressed = false
+    } else if (_.includes(["Control"], e.key)) {
+      spacePressed = false
+    }
+  }, false);
+
+  const drawBox = (r: TRect, color: string) => {
     ctx.beginPath();
     ctx.rect(r.x, r.y, r.width, r.height);
-    ctx.fillStyle = "#0095DD";
+    ctx.fillStyle = color;
     ctx.fill();
     ctx.closePath();
   }
 
-  const drawPlayer = () => {
+  const drawPlayer = (p: TPlayer, color) => {
+    drawBox({ x: p.x, y: p.y, width: p.width, height: p.height }, color)
+  }
+  const drawBullet = (p: TBullet, color) => {
+    drawBox({ x: p.x, y: p.y, width: p.width, height: p.height }, color)
   }
 
-  drawBox(playerRect)
+  const draw = () => {
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, viewport.width, viewport.height);
 
+    const newPlayerY = player.y
+      - (upPressed && player.y > 0 ? player.speed : 0)
+      + (downPressed && (player.y + player.height) < viewport.height ? player.speed : 0)
+    player = { ...player, y: newPlayerY }
+
+    if (spacePressed) {
+      if (player.canShot) {
+        player = {
+          ...player, canShot: false, bullets: [...player.bullets, {
+            x: player.x + player.width, y: player.y + player.width / 2, width: 8, height: 2, dest: { x: 8, y: 0 }
+          } as TBullet]
+        }
+      }
+    } else {
+      player = { ...player, canShot: true }
+    }
+    player.bullets = player.bullets.map(i => {
+      const next: TBullet = { ...i, x: i.x + i.dest.x, y: i.y + i.dest.y }
+      if (next.x < 0 || next.y < 0 || next.x + next.width > viewport.width || next.y + next.height > viewport.height) {
+        return null
+      }
+      drawBullet(next, 'white')
+      return next
+    }).filter(i => !!i)
+    drawPlayer(player, player.color)
+
+    enemies = enemies.map(i => {
+      const newEnemyY = i.y - (player.y < i.y ? i.speed : 0) + (player.y > i.y ? i.speed : 0)
+
+      const newBullets = i.bullets.map(i => {
+        const next: TBullet = { ...i, x: i.x + i.dest.x, y: i.y + i.dest.y }
+        if (next.x < 0 || next.y < 0 || next.x + next.width > viewport.width || next.y + next.height > viewport.height) {
+          return null
+        }
+        drawBullet(next, 'white')
+        return next
+      }).filter(i => !!i)
+
+      const newState: TPlayer = {
+        ...i, y: newEnemyY, bullets: (Math.random() < 0.02) ? [...newBullets, {
+          x: i.x, y: i.y + i.width / 2, width: 8, height: 2, dest: { x: -8, y: 0 }
+        } as TBullet] : newBullets
+      }
+      drawPlayer(newState, i.color)
+      return newState
+    })
+    if (Math.random() < 0.01) {
+      const option = Math.random() * 4
+      const color = `rgb(${Math.random() * 256},${Math.random() * 256},${Math.random() * 256})`
+      enemies = [...enemies, { x: viewport.width - 32 * 2 - option * 16, y: 0, width: 16 + 8 * option, height: 16 + 8 * option, speed: 2, bullets: [], canShot: true, color }]
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw()
 }
-
-const canvas = <HTMLCanvasElement>document.getElementById('myCanvas');
-main(canvas)
-// var ballRadius = 10;
-// var x = canvas.width/2;
-// var y = canvas.height-30;
-// var dx = 2;
-// var dy = -2;
-// var paddleHeight = 10;
-// var paddleWidth = 75;
-// var paddleX = (canvas.width-paddleWidth)/2;
-// var rightPressed = false;
-// var leftPressed = false;
-// var brickRowCount = 5;
-// var brickColumnCount = 3;
-// var brickWidth = 75;
-// var brickHeight = 20;
-// var brickPadding = 10;
-// var brickOffsetTop = 30;
-// var brickOffsetLeft = 30;
-// var score = 0;
-// var lives = 3;
-
-// var bricks = [];
-// for(var c=0; c<brickColumnCount; c++) {
-//     bricks[c] = [];
-//     for(var r=0; r<brickRowCount; r++) {
-//         bricks[c][r] = { x: 0, y: 0, status: 1 };
-//     }
-// }
-
-// document.addEventListener("keydown", keyDownHandler, false);
-// document.addEventListener("keyup", keyUpHandler, false);
-// document.addEventListener("mousemove", mouseMoveHandler, false);
-
-// function keyDownHandler(e) {
-//     if(e.keyCode == 39) {
-//         rightPressed = true;
-//     }
-//     else if(e.keyCode == 37) {
-//         leftPressed = true;
-//     }
-// }
-// function keyUpHandler(e) {
-//     if(e.keyCode == 39) {
-//         rightPressed = false;
-//     }
-//     else if(e.keyCode == 37) {
-//         leftPressed = false;
-//     }
-// }
-// function mouseMoveHandler(e) {
-//     var relativeX = e.clientX - canvas.offsetLeft;
-//     if(relativeX > 0 && relativeX < canvas.width) {
-//         paddleX = relativeX - paddleWidth/2;
-//     }
-// }
-// function collisionDetection() {
-//     for(var c=0; c<brickColumnCount; c++) {
-//         for(var r=0; r<brickRowCount; r++) {
-//             var b = bricks[c][r];
-//             if(b.status == 1) {
-//                 if(x > b.x && x < b.x+brickWidth && y > b.y && y < b.y+brickHeight) {
-//                     dy = -dy;
-//                     b.status = 0;
-//                     score++;
-//                     if(score == brickRowCount*brickColumnCount) {
-//                         alert("YOU WIN, CONGRATS!");
-//                         document.location.reload();
-//                     }
-//                 }
-//             }
-//         }
-//     }
-// }
-
-// function drawBall() {
-//     ctx.beginPath();
-//     ctx.arc(x, y, ballRadius, 0, Math.PI*2);
-//     ctx.fillStyle = "#0095DD";
-//     ctx.fill();
-//     ctx.closePath();
-// }
-// function drawPaddle() {
-//     ctx.beginPath();
-//     ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
-//     ctx.fillStyle = "#0095DD";
-//     ctx.fill();
-//     ctx.closePath();
-// }
-// function drawBricks() {
-//     for(var c=0; c<brickColumnCount; c++) {
-//         for(var r=0; r<brickRowCount; r++) {
-//             if(bricks[c][r].status == 1) {
-//                 var brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
-//                 var brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
-//                 bricks[c][r].x = brickX;
-//                 bricks[c][r].y = brickY;
-//                 ctx.beginPath();
-//                 ctx.rect(brickX, brickY, brickWidth, brickHeight);
-//                 ctx.fillStyle = "#0095DD";
-//                 ctx.fill();
-//                 ctx.closePath();
-//             }
-//         }
-//     }
-// }
-// function drawScore() {
-//     ctx.font = "16px Arial";
-//     ctx.fillStyle = "#0095DD";
-//     ctx.fillText("Score: "+score, 8, 20);
-// }
-// function drawLives() {
-//     ctx.font = "16px Arial";
-//     ctx.fillStyle = "#0095DD";
-//     ctx.fillText("Lives: "+lives, canvas.width-65, 20);
-// }
-
-// function draw() {
-//     ctx.clearRect(0, 0, canvas.width, canvas.height);
-//     drawBricks();
-//     drawBall();
-//     drawPaddle();
-//     drawScore();
-//     drawLives();
-//     collisionDetection();
-
-//     if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
-//         dx = -dx;
-//     }
-//     if(y + dy < ballRadius) {
-//         dy = -dy;
-//     }
-//     else if(y + dy > canvas.height-ballRadius) {
-//         if(x > paddleX && x < paddleX + paddleWidth) {
-//             dy = -dy;
-//         }
-//         else {
-//             lives--;
-//             if(!lives) {
-//                 alert("GAME OVER");
-//                 document.location.reload();
-//             }
-//             else {
-//                 x = canvas.width/2;
-//                 y = canvas.height-30;
-//                 dx = 3;
-//                 dy = -3;
-//                 paddleX = (canvas.width-paddleWidth)/2;
-//             }
-//         }
-//     }
-
-//     if(rightPressed && paddleX < canvas.width-paddleWidth) {
-//         paddleX += 7;
-//     }
-//     else if(leftPressed && paddleX > 0) {
-//         paddleX -= 7;
-//     }
-
-//     x += dx;
-//     y += dy;
-//     requestAnimationFrame(draw);
-// }
+main(<HTMLCanvasElement>document.getElementById("viewport"))
 
 
-
-// draw();
