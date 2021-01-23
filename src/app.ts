@@ -1,7 +1,30 @@
+type TPoint = {
+  x: number;
+  y: number
+}
+type TRect = TPoint & {
+  width: number;
+  height: number
+}
+
 
 const main = (viewport: HTMLCanvasElement): void => {
-    console.log('hello!')
-    const ctx = viewport.getContext("2d");
+  const ctx = viewport.getContext("2d");
+
+  const playerRect: TRect = { x: viewport.width / 2, y: viewport.height / 2, width: 32, height: 32 }
+
+  const drawBox = (r: TRect) => {
+    ctx.beginPath();
+    ctx.rect(r.x, r.y, r.width, r.height);
+    ctx.fillStyle = "#0095DD";
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  const drawPlayer = () => {
+  }
+
+  drawBox(playerRect)
 
 }
 

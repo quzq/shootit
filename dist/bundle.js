@@ -1,0 +1,1 @@
+(()=>{var t,e,h;h=(t=document.getElementById("myCanvas")).getContext("2d"),e={x:t.width/2,y:t.height/2,width:32,height:32},h.beginPath(),h.rect(e.x,e.y,e.width,e.height),h.fillStyle="#0095DD",h.fill(),h.closePath()})();
