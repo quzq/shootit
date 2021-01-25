@@ -6,5 +6,6 @@
   "files.trimTrailingWhitespace": true,
   "[typescriptreact]": {
     "editor.defaultFormatter": "vscode.typescript-language-features"
-  }
+  },
+  "git.ignoreLimitWarning": true
 }
