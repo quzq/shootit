@@ -2,7 +2,7 @@
 this is 2D shooting game.
 
 # screen shot
-now printing
+![s1](https://user-images.githubusercontent.com/46859244/105860718-3abc1200-6031-11eb-87b0-9f46435d7e76.png)
 
 # how to play
 `arrowUp`key: move up
