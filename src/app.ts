@@ -89,19 +89,17 @@ const main = (viewport: HTMLCanvasElement): void => {
     } else {
       player = { ...player, canShot: true }
     }
+    player.bullets = player.bullets.map(i => {
+      const next: TBullet = { ...i, x: i.x + i.dest.x, y: i.y + i.dest.y }
+      if (next.x < 0 || next.y < 0 || next.x + next.width > viewport.width || next.y + next.height > viewport.height) {
+        return null
+      }
+      drawBullet(next, 'white')
+      return next
+    }).filter(i => !!i)
     drawPlayer(player, player.color)
 
     enemies = enemies.map(i => {
-      player.bullets = player.bullets.map(i => {
-        const next: TBullet = { ...i, x: i.x + i.dest.x, y: i.y + i.dest.y }
-        if (next.x < 0 || next.y < 0 || next.x + next.width > viewport.width || next.y + next.height > viewport.height) {
-          return null
-        }
-
-        drawBullet(next, 'white')
-        return next
-      }).filter(i => !!i)
-
       const newPoint = {
         x: (i.x + i.width) < 0 ? viewport.width * 2 : i.x - i.speed,
         y: i.y - (player.y < i.y ? i.speed : 0) + (player.y > i.y ? i.speed : 0),
