@@ -12,6 +12,7 @@ type TBullet = TRect & {
   dest: TPoint;
 }
 type TPlayer = TRect & {
+  hp: number
   speed: number;
   bullets: TBullet[]
   canShot: boolean
@@ -21,8 +22,13 @@ type TPlayer = TRect & {
 
 const main = (viewport: HTMLCanvasElement): void => {
   const ctx = viewport.getContext("2d");
+  ctx.textBaseline = 'top'
+  ctx.shadowColor = 'blue'
+  ctx.shadowOffsetX = 3;
+  ctx.shadowOffsetY = 3;
+  ctx.shadowBlur = 5
 
-  let player: TPlayer = { x: 32, y: viewport.height / 2, width: 32, height: 32, speed: 4, bullets: [], canShot: true, color: '#FF9500' }
+  let player: TPlayer = { x: 32, y: viewport.height / 2, width: 32, height: 32, speed: 4, hp: 1, bullets: [], canShot: true, color: '#FF9500' }
   let enemies: TPlayer[] = []
 
 
@@ -83,18 +89,23 @@ const main = (viewport: HTMLCanvasElement): void => {
     } else {
       player = { ...player, canShot: true }
     }
-    player.bullets = player.bullets.map(i => {
-      const next: TBullet = { ...i, x: i.x + i.dest.x, y: i.y + i.dest.y }
-      if (next.x < 0 || next.y < 0 || next.x + next.width > viewport.width || next.y + next.height > viewport.height) {
-        return null
-      }
-      drawBullet(next, 'white')
-      return next
-    }).filter(i => !!i)
     drawPlayer(player, player.color)
 
     enemies = enemies.map(i => {
-      const newEnemyY = i.y - (player.y < i.y ? i.speed : 0) + (player.y > i.y ? i.speed : 0)
+      player.bullets = player.bullets.map(i => {
+        const next: TBullet = { ...i, x: i.x + i.dest.x, y: i.y + i.dest.y }
+        if (next.x < 0 || next.y < 0 || next.x + next.width > viewport.width || next.y + next.height > viewport.height) {
+          return null
+        }
+
+        drawBullet(next, 'white')
+        return next
+      }).filter(i => !!i)
+
+      const newPoint = {
+        x: (i.x + i.width) < 0 ? viewport.width * 2 : i.x - i.speed,
+        y: i.y - (player.y < i.y ? i.speed : 0) + (player.y > i.y ? i.speed : 0),
+      }
 
       const newBullets = i.bullets.map(i => {
         const next: TBullet = { ...i, x: i.x + i.dest.x, y: i.y + i.dest.y }
@@ -106,7 +117,7 @@ const main = (viewport: HTMLCanvasElement): void => {
       }).filter(i => !!i)
 
       const newState: TPlayer = {
-        ...i, y: newEnemyY, bullets: (Math.random() < 0.02) ? [...newBullets, {
+        ...i, ...newPoint, bullets: (Math.random() < 0.02) ? [...newBullets, {
           x: i.x, y: i.y + i.width / 2, width: 8, height: 2, dest: { x: -8, y: 0 }
         } as TBullet] : newBullets
       }
@@ -116,7 +127,7 @@ const main = (viewport: HTMLCanvasElement): void => {
     if (Math.random() < 0.01) {
       const option = Math.random() * 4
       const color = `rgb(${Math.random() * 256},${Math.random() * 256},${Math.random() * 256})`
-      enemies = [...enemies, { x: viewport.width - 32 * 2 - option * 16, y: 0, width: 16 + 8 * option, height: 16 + 8 * option, speed: 2, bullets: [], canShot: true, color }]
+      enemies = [...enemies, { x: viewport.width - 32 * 2 - option * 16, y: 0, width: 16 + 8 * option, height: 16 + 8 * option, speed: 2, hp: 1, bullets: [], canShot: true, color }]
     }
 
     requestAnimationFrame(draw);
