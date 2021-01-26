@@ -9,7 +9,7 @@ now printing
 
 `arrowDown`key: move down
 
-`Ctrl`key : shot
+`Ctrl`key : shoot
 
 
 
