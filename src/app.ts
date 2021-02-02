@@ -19,6 +19,15 @@ type TPlayer = TRect & {
   color: string
 }
 
+export const hitTestRect = (rect1: TRect, rect2: TRect) => {
+  if (rect1.x < rect2.x + rect2.width &&
+    rect1.x + rect1.width > rect2.x &&
+    rect1.y < rect2.y + rect2.height &&
+    rect1.height + rect1.y > rect2.y) {
+    return true
+  }
+  return false
+}
 
 const main = (viewport: HTMLCanvasElement): void => {
   const ctx = viewport.getContext("2d");
@@ -119,7 +128,9 @@ const main = (viewport: HTMLCanvasElement): void => {
           x: i.x, y: i.y + i.width / 2, width: 8, height: 2, dest: { x: -8, y: 0 }
         } as TBullet] : newBullets
       }
-      drawPlayer(newState, i.color)
+      const enemyRect = { x: i.x, y: i.y, width: i.width, height: i.height }
+      const hit = player.bullets.map(b => hitTestRect({ x: b.x, y: b.y, width: b.width, height: b.height }, enemyRect)).filter(i => true).length > 0
+      drawPlayer(newState, hit ? 'white' : i.color)
       return newState
     })
     if (Math.random() < 0.01) {
